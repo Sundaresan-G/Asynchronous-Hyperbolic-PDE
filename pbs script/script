@@ -1,0 +1,23 @@
+#!/bin/bash
+#PBS -N myjob
+#PBS -q workq
+#PBS -l nodes=8:ppn=24
+
+cd $PBS_O_WORKDIR
+cat $PBS_NODEFILE > pbs_nodes
+NPROCS=`wc -l < $PBS_NODEFILE`
+NNODES=`uniq $PBS_NODEFILE | wc -l`
+
+### Display the job context
+echo Running on host `hostname`
+echo Time is `date`
+echo Directory is `pwd`
+echo Using ${NPROCS} processors across ${NNODES} nodes
+
+## UnComment the below for openmpi
+module load openmpi
+export PATH=/apps/software/mpi44/bin:$PATH
+export LD_LIBRARY_PATH=/apps/software/mpi44/lib:$LD_LIBRARY_PATH
+
+/apps/openmpi/bin/mpirun --mca btl_openib_allow_ib 1 --mca routed direct --mca pml ob1 --mca btl self,tcp  --mca btl_tcp_if_exclude virbr0,lo   -np  192  --hostfile $PBS_NODEFILE ./hello
+
